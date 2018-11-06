@@ -1,184 +1,171 @@
 import numpy as np
 
 
-def next_TD_LR_diagonal(mat, x, y):
-    """
-    Given the current x & y coords,
-    finds the next VALID Top->Down Left->Right diagonal cell
-    else returns False
-    """
-    r, c = mat.shape
-    x_new = x + 1
-    y_new = y + 1
-    if x_new < r and y_new < c:
-        return (x_new, y_new)
-    else:
-        return False
+class Game:
+    mat = None  # this represents the board matrix
+    rows = 0  # this represents the number of rows of the board
+    cols = 0  # this represents the number of columns of the board
+    turn = 0  # this represents whose turn it is (1 for player 1, 2 for player 2)
+    wins = 0  # this represents the number of consecutive disks you need to force in order to win
 
+    def check_victory(game):
+        """
+        Check if victory condition has been reached.
+        Takes in a game object as input and returns
+        1 if player 1 wins
+        2 if player 2 wins
+        3 if it's a draw
+        0 otherwise
+        """
 
-def next_TD_RL_diagonal(mat, x, y):
-    """
-    Given the current x & y coords,
-    finds the next VALID Top->Down Right->Left diagonal cell
-    else returns False
-    """
-    r, c = mat.shape
-    x_new = x + 1
-    y_new = y - 1
-    if x_new < r and y_new >= 0:
-        return (x_new, y_new)
-    else:
-        return False
-
-
-def generate_TD_LR_starting_coords(mat, wins):
-    """
-    Generates a list of initial coordinates
-    to call next_TD_LR_diagonal() on
-    """
-    r, c = mat.shape
-    starting_coords = []
-    for i in range(0, r):
-        if (r - i) >= wins:
-            starting_coords.append((i, 0))
-    for j in range(1, c):
-        if (c - j) >= wins:
-            starting_coords.append((0, j))
-    return starting_coords
-
-
-def generate_TD_RL_starting_coords(mat, wins):
-    """
-    Generates a list of initial coordinates
-    to call next_TD_LR_diagonal() on
-    """
-    r, c = mat.shape
-    rd = r - 1  # r_decrement
-    cd = c - 1  # c_decrement
-    winsd = wins - 1  # wins_decrement
-    starting_coords = []
-    for i in range(rd):
-        if (r - i) >= wins:
-            starting_coords.append((i, cd))
-    for j in range(cd):
-        if (j - winsd) >= 0:
-            starting_coords.append((0, j))
-    return starting_coords
-
-
-def check_diagonals(mat, starting_coords, next_diagonal_cell):
-    """
-    Given a list of starting coordinates and an iterator function for coordinates,
-    scan the matrix until a winning combination is first found,
-    then return (winner, winning_coords)
-    else return (     0,       (-1, -1))
-    """
-    p1counter = 0
-    p2counter = 0
-    # winner
-    result = 0
-    # last coordinates of where the winning combo was found.
-    # For debugging only
-    last = (-1, -1)
-    # starting_coords is a list of tuples representing
-    for x, y in starting_coords:
-        print("")
-        while True:
-            print(x, y)
-            # if cell(x,y) is 1, increment p1counter
-            if mat[x][y] == 1:
-                p1counter += 1
-                # if p1counter is already 4, player 1 wins
-                if p1counter >= 4:
-                    result = 1
-                    last = (x, y)
-                    break
-            # if cell(x,y) is 2, increment p2counter
-            elif mat[x][y] == 2:
-                p2counter += 1
-                # if p2counter is already 4, player 2 wins
-                if p2counter >= 4:
-                    result = 2
-                    last = (x, y)
-                    break
-            # if cell(x,y) is 0, reset both p1counter & p2counter
-            else:
-                p1counter = 0
-                p2counter = 0
-            # obtain the next_cell based on the current x,y
-            #   as well as fx & fy, which affect which diagonal direction to go
-            next_cell = next_diagonal_cell(mat, x, y)
-            # if next_cell is valid, unpack the new x & y coords
-            if next_cell:
-                x, y = next_cell
-            # if next_cell is invalid, break out of the while True loop
-            else:
-                if p1counter >= 4:
-                    result = 1
-                    last = (x, y)
-                elif p2counter >= 4:
-                    result = 2
-                    last = (x, y)
+        def check_diagonals(mat, wins):
+            """
+            Given a list of starting coordinates for diagonals and an iterator function for coordinates,
+            scan the matrix until a winning combination is first found,
+            then return winner
+            else return 0
+            """
+            def next_diagonal_cell(mat, x, y):
+                """
+                Given the current x & y coords,
+                finds the next VALID Top->Down Left->Right diagonal cell within the matrix
+                else returns False
+                """
+                r, c = mat.shape
+                x_new = x + 1
+                y_new = y + 1
+                # Check if x_new, y_new exceed the matrix bounds
+                if x_new < r and y_new < c:
+                    return (x_new, y_new)
                 else:
-                    result = 0
-                break
-        # if the winner is still found, break out of the for loop
-        if result != 0:
-            break
-    return (result, last)
+                    return False
 
+            p1counter = 0  # keeps track of player 1's score
+            p2counter = 0  # keeps track of player 2's score
+            result = (0, 0)
 
-def check_horizontals(mat):
-    r, c = mat.shape
-    p1counter = 0
-    p2counter = 0
-    result = 0
-    last = (-1, -1)
-    for row in mat:
-        for num in row:
-            if num == 1:
-                p1counter += 1
-                if p1counter >= 4:
-                    result = 1
-                    last = (row, num)
+            r, c = mat.shape
+            # generate a list of starting_coords to loop over
+            # starting_coords is a list of tuples representing the initial coordinate of each diagonal
+            starting_coords = []
+            for i in range(0, r):
+                if (r - i) >= wins:
+                    starting_coords.append((i, 0))
+            for j in range(1, c):
+                if (c - j) >= wins:
+                    starting_coords.append((0, j))
+
+            for x, y in starting_coords:
+                while True:
+                    if mat[x][y] == 1:
+                        p1counter += 1
+                    elif mat[x][y] == 2:
+                        p2counter += 1
+                    else:
+                        p1counter = 0
+                        p2counter = 0
+
+                    p1wins = p1counter >= wins
+                    p2wins = p2counter >= wins
+                    if p1wins or p2wins:
+                        if p1wins and p2wins:
+                            result = (1, 1)
+                        elif p1wins:
+                            result = (1, 0)
+                        elif p2wins:
+                            result = (0, 1)
+                        else:
+                            result = (0, 0)
+                        break
+
+                    # obtain the next diagonal cell based on the current x,y
+                    next_cell = next_diagonal_cell(mat, x, y)
+
+                    # if next_cell is valid, unpack the new x & y coords
+                    if next_cell:
+                        x, y = next_cell
+                    # if next_cell is invalid, break out of the while True loop
+                    else:
+                        p1wins = p1counter >= wins
+                        p2wins = p2counter >= wins
+                        if p1wins or p2wins:
+                            if p1wins and p2wins:
+                                result = (1, 1)
+                            elif p1wins:
+                                result = (1, 0)
+                            elif p2wins:
+                                result = (0, 1)
+                            else:
+                                result = (0, 0)
+                            break
+
+                # if the winner is found, break out of the for loop
+                if result != (0, 0):
                     break
-            elif num == 2:
-                p2counter += 1
-                if p2counter >= 4:
-                    result = 2
-                    last = (row, num)
+            return result
+
+        def check_horizontals(mat):
+            r, c = mat.shape
+            p1counter = 0
+            p2counter = 0
+            result = (0, 0)
+            for row in mat:
+                for num in row:
+                    if num == 1:
+                        p1counter += 1
+                    if num == 2:
+                        p2counter += 1
+                    else:
+                        p1counter = 0
+                        p2counter = 0
+
+                p1wins = p1counter >= wins
+                p2wins = p2counter >= wins
+                if p1wins or p2wins:
+                    if p1wins and p2wins:
+                        result = (1, 1)
+                    elif p1wins:
+                        result = (1, 0)
+                    elif p2wins:
+                        result = (0, 1)
+                    else:
+                        result = (0, 0)
                     break
-            else:
-                p1counter = 0
-                p2counter = 0
-        if result != 0:
-            break
-    return (result, last)
 
+            return result
 
-def check_victory(mat):
-    """
-    Check if victory condition has been reached.
-    Takes in a game object as input and returns
-    1 if player 1 wins
-    2 if player 2 wins
-    3 if it's a draw
-    0 otherwise
-    """
-    winner, loc = check_horizontals(mat)
-    if winner != 0:
-        return winner
-    winner, loc = check_horizontals(mat.transpose())
-    if winner != 0:
-        return winner
-    winner, loc = check_diagonals(mat, generate_TD_LR_starting_coords(mat, 4), next_TD_LR_diagonal)
-    if winner != 0:
-        return winner
-    winner, loc = check_diagonals(mat, generate_TD_RL_starting_coords(mat, 4), next_TD_RL_diagonal)
-    if winner != 0:
-        return winner
-    # check for draw
-    return 0
+        ra = [2, 1, 1, 1, 0, 0]
+        rb = [0, 2, 0, 0, 0, 0]
+        rc = [0, 0, 2, 0, 0, 0]
+        rd = [0, 0, 0, 2, 0, 0]
+        re = [0, 0, 1, 0, 2, 0]
+        rf = [0, 0, 0, 1, 0, 2]
+        mat = np.array([ra, rb, rc, rd, re, rf])
+        mat
+        mat = game.mat
+
+        # check rows for a winner
+        row_winner = check_horizontals(mat)
+        if row_winner != 0:
+            return row_winner
+
+        # check columns for a winner
+        col_winner = check_horizontals(mat.transpose())
+        if col_winner != 0:
+            return col_winner
+
+        # check top->down left->right (td_lr) diagonals for a winner
+        td_lr_winner = check_diagonals(mat, wins)
+        if td_lr_winner != 0:
+            return td_lr_winner
+
+        # check top->down right->left (td_rl) diagonals for a winner
+        td_rl_winner = check_diagonals(np.fliplr(mat), wins)
+        if td_rl_winner != 0:
+            return td_rl_winner
+
+        # check for draw
+        return 0
 
 
 def apply_move(game, col, pop):
@@ -248,14 +235,6 @@ def menu():
     return
 
 
-class Game:
-    mat = None  # this represents the board matrix
-    rows = 0  # this represents the number of rows of the board
-    cols = 0  # this represents the number of columns of the board
-    turn = 0  # this represents whose turn it is (1 for player 1, 2 for player 2)
-    wins = 0  # this represents the number of consecutive disks you need to force in order to win
-
-
 # Tests
 # test for next_TD_RL_diagonal
 ra = [1, 0, 0, 0, 0, 0]
@@ -266,13 +245,13 @@ re = [0, 0, 1, 0, 1, 0]
 rf = [0, 0, 0, 1, 0, 1]
 mat = np.array([ra, rb, rc, rd, re, rf])
 mat
-next_TD_RL_diagonal(mat, 4, 3)
+# next_TD_RL_diagonal(mat, 4, 3)
 
 # test for generate_TD_LR_starting_coords()
-generate_TD_LR_starting_coords(6, 6, 4)
+# generate_TD_LR_starting_coords(6, 6, 4)
 
 # test for generate_TD_RL_starting_coords()
-generate_TD_RL_starting_coords(6, 6, 4)
+# generate_TD_RL_starting_coords(6, 6, 4)
 
 # tests for check_diagonal
 ra = [1, 1, 1, 1, 0, 0]
@@ -283,10 +262,10 @@ re = [0, 0, 1, 0, 1, 0]
 rf = [0, 0, 0, 1, 0, 1]
 mat = np.array([ra, rb, rc, rd, re, rf])
 mat
-starting_coords = generate_TD_LR_starting_coords(6, 6, 4)
-starting_coords
-((winner, score), last) = check_diagonals(mat, starting_coords, next_TD_LR_diagonal)
-winner, score, last
+# starting_coords = generate_TD_LR_starting_coords(6, 6, 4)
+# starting_coords
+# winner = check_diagonals(mat, starting_coords, next_TD_LR_diagonal)
+# winner
 
 # tests for apply_move
 r0 = [0, 0, 0, 0, 0]
@@ -318,5 +297,3 @@ re = [0, 0, 1, 1, 1, 1]
 rf = [0, 0, 0, 1, 0, 1]
 mat = np.array([ra, rb, rc, rd, re, rf])
 mat
-
-
