@@ -60,7 +60,7 @@ setlocal foldcolumn=0
 setlocal foldenable
 setlocal foldexpr=0
 setlocal foldignore=#
-setlocal foldlevel=0
+setlocal foldlevel=1
 setlocal foldmarker={{{,}}}
 setlocal foldmethod=manual
 setlocal foldminlines=1
@@ -131,28 +131,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-28,41fold
-21,105fold
-107,135fold
-11,168fold
-171,194fold
-197,210fold
-213,217fold
-220,227fold
-230,235fold
-11
-normal! zo
-21
-normal! zo
-21
-normal! zc
-11
-normal! zc
-let s:l = 297 - ((16 * winheight(0) + 22) / 45)
+14,65fold
+68,103fold
+106,115fold
+168,172fold
+175,216fold
+let s:l = 89 - ((0 * winheight(0) + 22) / 44)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-297
+89
 normal! 0
 lcd ~/Documents/SIMS-scraping
 let &so = s:so_save | let &siso = s:siso_save

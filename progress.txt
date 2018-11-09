@@ -1,0 +1,2 @@
+Why is the computer ignoring potentially winning moves by the player?
+    worse still, why is apply_move seemingly acting on an entirely different matrix altogether?
