@@ -133,7 +133,6 @@ def computer_move(game, level):
                 possible_moves.append((i, False))
         return possible_moves
 
-    assert game.turn == 2
     # possible_moves[] is a list of (col, pop) tuples representing all the valid moves the computer can make
     possible_moves = generate_possible_moves(game)  # These are all the possible moves
     possible_moves_avoid_direct_loss = []  # These moves avoid losing in the current turn
@@ -271,4 +270,5 @@ def menu():
         return
 
 
-menu()
+if __name__ == '__main__':
+    menu()

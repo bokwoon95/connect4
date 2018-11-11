@@ -10,8 +10,8 @@ nnoremap <buffer>  r :call jedi#rename()
 nnoremap <buffer>  n :call jedi#usages()
 nnoremap <buffer>  g :call jedi#goto_assignments()
 nnoremap <buffer>  d :call jedi#goto()
-nmap <buffer> <expr> " peekaboo#peek(v:count1, '"',  0)
 xmap <buffer> <expr> " peekaboo#peek(v:count1, '"',  1)
+nmap <buffer> <expr> " peekaboo#peek(v:count1, '"',  0)
 nmap <buffer> <expr> @ peekaboo#peek(v:count1, '@', 0)
 nnoremap <buffer> <silent> K :call jedi#show_documentation()
 snoremap <buffer> <expr> <C-Space> 'c'.jedi#complete_string(0)
@@ -137,18 +137,18 @@ silent! normal! zE
 12,73fold
 76,106fold
 109,118fold
-121,197fold
-200,204fold
-207,271fold
+121,196fold
+199,203fold
+206,270fold
 12
 normal! zo
 12
 normal! zc
-let s:l = 75 - ((74 * winheight(0) + 22) / 45)
+let s:l = 274 - ((273 * winheight(0) + 22) / 45)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-75
+274
 normal! 0
 lcd ~/Documents/connect4
 let &so = s:so_save | let &siso = s:siso_save
