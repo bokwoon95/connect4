@@ -9,26 +9,16 @@ class Game:
     wins = 0
 
 
-def copy_game(game):
-    game2 = Game()
-    game2.mat = np.copy(game.mat)
-    game2.rows = game.rows
-    game2.cols = game.cols
-    game2.turn = game.turn
-    game2.wins = game.wins
-    return game2
-
-
 def check_victory(game):
     winners = []
 
     def check_diagonals(game, mat):
+        # starting_coords is a list of tuples (coordinates) representing the start of each diagonal
         starting_coords = []
         for i in range(0, game.rows):
             starting_coords.append((i, 0))
         for j in range(1, game.cols):
             starting_coords.append((0, j))
-        # starting_coords is a list of tuples representing the start of each diagonal
         for (x, y) in starting_coords:
             # collector collects consecutive numbers that are the same
             collector = []
@@ -84,6 +74,15 @@ def check_victory(game):
 
 
 def apply_move(game, col, pop):
+    def copy_game(game):
+        game2 = Game()
+        game2.mat = np.copy(game.mat)
+        game2.rows = game.rows
+        game2.cols = game.cols
+        game2.turn = game.turn
+        game2.wins = game.wins
+        return game2
+
     # copy_game() is needed to create duplicate of the game
     # so that the copy can be changed without affecting the original
     game2 = copy_game(game)
@@ -122,6 +121,10 @@ def check_move(game, col, pop):
 def computer_move(game, level):
 
     def generate_possible_moves(game):
+        """
+        Depending on the board and current player,
+        generate all possible moves for that player
+        """
         possible_moves = []
         for i in range(game.cols):
             if check_move(game, i, True):
@@ -130,10 +133,11 @@ def computer_move(game, level):
                 possible_moves.append((i, False))
         return possible_moves
 
+    assert game.turn == 2
     # possible_moves[] is a list of (col, pop) tuples representing all the valid moves the computer can make
-    possible_moves = generate_possible_moves(game)
-    possible_moves_avoid_direct_loss = []
-    possible_moves_avoid_future_loss = []
+    possible_moves = generate_possible_moves(game)  # These are all the possible moves
+    possible_moves_avoid_direct_loss = []  # These moves avoid losing in the current turn
+    possible_moves_avoid_future_loss = []  # These moves avoid losing in the next turn
 
     if level == 1:
         # pick a random move from possible_moves
@@ -142,10 +146,13 @@ def computer_move(game, level):
         return possible_moves[i]
 
     elif level == 2:
+        # loop through every move in possible_moves
+        # and check if the computer loses in this turn or the next
+        # if if wins instead, play that move immediately
         for move in possible_moves:
             col, pop = move
             future_game = apply_move(game, col, pop)
-            future_game.turn = 1
+            future_game.turn = 1  # in the future game, it's the player's turn
             future_winner = check_victory(future_game)
 
             if future_winner == 2:
@@ -153,16 +160,18 @@ def computer_move(game, level):
                 return move
 
             # if the human player doesn't win as an outcome of this computer move,
-            # add it to the list of moves that avoid direct loss
+            # append it to the list of moves that avoid direct loss
             if future_winner != 1:
                 possible_moves_avoid_direct_loss.append(move)
 
             # if nobody wins as an outcome of this computer move,
             # and the human also won't be able to win on their next turn,
-            # add it to the list of moves that avoid future loss
+            # append it to the list of moves that avoid future loss
             if future_winner == 0:
                 human_wins = False
                 possible_countermoves = generate_possible_moves(future_game)
+                # loop through all the possible countermoves that the
+                # human can play in response to this move and check if he wins
                 for countermove in possible_countermoves:
                     ccol, cpop = countermove
                     future_future_game = apply_move(future_game, ccol, cpop)
@@ -189,30 +198,43 @@ def computer_move(game, level):
 
 
 def display_board(game):
-    print()
+    print("")
     print(game.mat)
-    print()
+    print("")
     return
 
 
 def menu():
+
     def next_turn(game):
         if game.turn == 1:
             game.turn = 2
         elif game.turn == 2:
             game.turn = 1
+
+    # Ask user to setup the board
     game = Game()
-    # print("Hello, please answer the following questions:")
-    # game.rows = int(input("How many rows?"))
-    # game.cols = int(input("How many columns?"))
-    # game.wins = int(input("How many pieces in a row to win?"))
-    game.mat = np.zeros((6, 6), dtype=np.int8)
-    game.wins = 4
-    game.turn = 1
-    game.rows = 6
-    game.cols = 6
+    print("Hello, would you like to change the defaults?")
+    print("Board size   :      6 x 6")
+    print("Win condition: 4 in a row")
+    change_defaults = input("y/n: ")
+    change_defaults = True if change_defaults == "y" else False
+    if change_defaults:
+        game.rows = int(input("How many rows? "))
+        game.cols = int(input("How many columns? "))
+        game.turn = 1
+        game.wins = int(input("How many pieces in a row to win? "))
+        game.mat = np.zeros((game.rows, game.cols), dtype=np.int8)
+    else:
+        game.rows = 6
+        game.cols = 6
+        game.turn = 1
+        game.wins = 4
+        game.mat = np.zeros((6, 6), dtype=np.int8)
+
+    # Main gameplay loop
     display_board(game)
-    while check_victory(game) == 0:
+    while True:
         print("Player {}".format(game.turn))
 
         # if it's turn 2, the computer moves
@@ -220,11 +242,7 @@ def menu():
             col, pop = computer_move(game, 2)
         # if it's turn 1, player gets to move
         else:
-            try:
-                col = int(input("which column? "))
-            except ValueError:
-                print("Only integers are accepted")
-                continue
+            col = int(input("which column? "))
             if col < 1 or col > game.cols:
                 print("Sorry, that falls outside the column values of 1 to {}".format(game.cols))
                 continue
@@ -233,22 +251,24 @@ def menu():
                 col -= 1
             pop = input("pop (y/n)? ")
             pop = True if pop == "y" else False
-
         if check_move(game, col, pop):
             game = apply_move(game, col, pop)
         else:
             print("That move is not aloud")
             continue
         display_board(game)
+        winner = check_victory(game)
+        if winner != 0:
+            break
         next_turn(game)
 
-    # check if game is draw
-    if check_victory(game) == 3:
+    # Check who won/ or a draw
+    if winner == 3:
         print("The game is a draw")
         return
-
-    print("Player {} wins".format(check_victory(game)))
-    return
+    else:
+        print("Player {} wins".format(winner))
+        return
 
 
 menu()
