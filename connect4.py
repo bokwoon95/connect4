@@ -92,10 +92,10 @@ def apply_move(game, col, pop):
     mat = game2.mat.transpose()
 
     # Depending on whether pop or push, alter mat_col accordingly
-    if pop:
+    if pop is True:
         # shift everything down by one element and insert a 0 at the start
         mat[col] = np.insert(mat[col][0:-1], 0, 0)
-    else:
+    elif pop is False:
         # cascade the pushed player piece down until it hits an obstacle
         for i in range(len(mat[col])):
             if i == (len(mat[col]) - 1) or mat[col][i] == 0 and mat[col][i+1] != 0:
@@ -112,10 +112,12 @@ def check_move(game, col, pop):
         return False
     else:
         game_col = mat[col]
-        if pop:
+        if pop is True:
             return game_col[-1] == game.turn
-        else:
+        elif pop is False:
             return game_col[0] == 0
+        else:
+            raise ValueError('pop is neither True nor False')
 
 
 def computer_move(game, level):
